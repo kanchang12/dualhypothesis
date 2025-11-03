@@ -1,38 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Cost Comparison - 50 Automated Tests</title>
+    <title>Path Comparison - Real Unit Tests</title>
     <style>
         body { font-family: Arial; padding: 20px; background: #f5f5f5; margin: 0; }
-        h1 { text-align: center; margin-bottom: 10px; }
+        h1 { text-align: center; margin-bottom: 30px; }
         
-        /* Progress dots */
-        .progress-bar { 
-            text-align: center; 
-            padding: 20px; 
-            background: white; 
+        .start-section {
+            text-align: center;
+            background: white;
+            padding: 20px;
             margin-bottom: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .dots { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 8px; 
-            justify-content: center;
-            margin-top: 15px;
-        }
-        .dot { 
-            width: 14px; 
-            height: 14px; 
-            border-radius: 50%; 
-            background: #ddd;
-            transition: all 0.3s;
-        }
-        .dot.success { background: #4CAF50; }
-        .dot.fail { background: #f44336; }
         
-        /* Start button */
         .start-btn {
             background: #2196F3;
             color: white;
@@ -46,43 +28,75 @@
         .start-btn:hover { background: #1976D2; }
         .start-btn:disabled { background: #ccc; cursor: not-allowed; }
         
-        /* Results container */
-        .container { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 20px;
-        }
-        .panel { 
-            background: white; 
-            padding: 20px; 
+        .progress-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .panel h2 { 
-            margin-top: 0; 
+        
+        .path-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .path1-label { color: #4285f4; }
+        .path2-label { color: #ea4335; }
+        
+        .dots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #ddd;
+            transition: all 0.3s;
+        }
+        .dot.success { background: #4CAF50; }
+        .dot.fail { background: #f44336; }
+        .dot.running { background: #FFC107; animation: pulse 1s infinite; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .results {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .panel h2 {
+            margin-top: 0;
             padding-bottom: 10px;
             border-bottom: 3px solid #ddd;
         }
-        .panel.gemini h2 { color: #4285f4; border-color: #4285f4; }
-        .panel.dual h2 { color: #ea4335; border-color: #ea4335; }
+        .panel.path1 h2 { color: #4285f4; border-color: #4285f4; }
+        .panel.path2 h2 { color: #ea4335; border-color: #ea4335; }
         
-        /* KPIs */
-        .kpis { 
-            background: #f9f9f9; 
-            padding: 15px; 
-            border-radius: 6px;
-            margin: 15px 0;
-        }
-        .kpi-row { 
-            display: flex; 
+        .kpi {
+            display: flex;
             justify-content: space-between;
-            margin: 8px 0;
-            font-size: 14px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
         }
         .kpi-label { color: #666; }
         .kpi-value { font-weight: bold; color: #333; }
         
-        /* Current test */
         .current-test {
             background: #e3f2fd;
             padding: 10px;
@@ -92,95 +106,103 @@
             color: #1976d2;
         }
         
-        /* Status */
-        .status {
-            text-align: center;
+        .winner {
+            background: #4CAF50;
+            color: white;
             padding: 15px;
-            font-size: 16px;
-            color: #666;
+            text-align: center;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <h1>Automated Cost Comparison: Gemini vs Gemini+OpenAI</h1>
+    <h1>Path Comparison: Real Unit Test Execution</h1>
     
-    <div class="progress-bar">
-        <button class="start-btn" id="startBtn" onclick="runAllTests()">
+    <div class="start-section">
+        <button class="start-btn" id="startBtn" onclick="runExperiment()">
             Start 50 Tests
         </button>
-        <div class="dots" id="dots"></div>
     </div>
     
-    <div class="container">
-        <div class="panel gemini">
+    <div class="progress-section">
+        <div class="path-label path1-label">Path 1: Gemini → Unit Test (retry until pass)</div>
+        <div class="dots" id="dots-path1"></div>
+        
+        <div class="path-label path2-label">Path 2: Gemini → OpenAI → Unit Test (retry until pass)</div>
+        <div class="dots" id="dots-path2"></div>
+    </div>
+    
+    <div class="results">
+        <div class="panel path1">
             <h2>Path 1: Gemini Only</h2>
-            <div id="gemini-status" class="status">Ready to start</div>
-            <div id="gemini-current" class="current-test" style="display:none;"></div>
-            <div class="kpis">
-                <div class="kpi-row">
-                    <span class="kpi-label">Tests Completed:</span>
-                    <span class="kpi-value" id="gemini-count">0 / 50</span>
-                </div>
-                <div class="kpi-row">
-                    <span class="kpi-label">Total Time:</span>
-                    <span class="kpi-value" id="gemini-time">0s</span>
-                </div>
-                <div class="kpi-row">
-                    <span class="kpi-label">Total Tokens:</span>
-                    <span class="kpi-value" id="gemini-tokens">0</span>
-                </div>
-                <div class="kpi-row">
-                    <span class="kpi-label">Total Cost:</span>
-                    <span class="kpi-value" id="gemini-cost">$0.000000</span>
-                </div>
-                <div class="kpi-row">
-                    <span class="kpi-label">Total Attempts:</span>
-                    <span class="kpi-value" id="gemini-attempts">0</span>
-                </div>
+            <div id="path1-current" class="current-test" style="display:none;"></div>
+            <div class="kpi">
+                <span class="kpi-label">Tests Completed:</span>
+                <span class="kpi-value" id="path1-completed">0 / 50</span>
+            </div>
+            <div class="kpi">
+                <span class="kpi-label">Total Attempts:</span>
+                <span class="kpi-value" id="path1-attempts">0</span>
+            </div>
+            <div class="kpi">
+                <span class="kpi-label">Avg Attempts/Test:</span>
+                <span class="kpi-value" id="path1-avg">0</span>
+            </div>
+            <div class="kpi">
+                <span class="kpi-label">Total Time:</span>
+                <span class="kpi-value" id="path1-time">0s</span>
+            </div>
+            <div class="kpi">
+                <span class="kpi-label">Total Tokens:</span>
+                <span class="kpi-value" id="path1-tokens">0</span>
+            </div>
+            <div class="kpi">
+                <span class="kpi-label">Total Cost:</span>
+                <span class="kpi-value" id="path1-cost">$0.000000</span>
             </div>
         </div>
         
-        <div class="panel dual">
+        <div class="panel path2">
             <h2>Path 2: Gemini + OpenAI</h2>
-            <div id="dual-status" class="status">Ready to start</div>
-            <div id="dual-current" class="current-test" style="display:none;"></div>
-            <div class="kpis">
-                <div class="kpi-row">
-                    <span class="kpi-label">Tests Completed:</span>
-                    <span class="kpi-value" id="dual-count">0 / 50</span>
-                </div>
-                <div class="kpi-row">
-                    <span class="kpi-label">Total Time:</span>
-                    <span class="kpi-value" id="dual-time">0s</span>
-                </div>
-                <div class="kpi-row">
-                    <span class="kpi-label">Total Tokens:</span>
-                    <span class="kpi-value" id="dual-tokens">0</span>
-                </div>
-                <div class="kpi-row">
-                    <span class="kpi-label">Total Cost:</span>
-                    <span class="kpi-value" id="dual-cost">$0.000000</span>
-                </div>
-                <div class="kpi-row">
-                    <span class="kpi-label">Validation Pass:</span>
-                    <span class="kpi-value" id="dual-pass">0</span>
-                </div>
-                <div class="kpi-row">
-                    <span class="kpi-label">Total Attempts:</span>
-                    <span class="kpi-value" id="dual-attempts">0</span>
-                </div>
+            <div id="path2-current" class="current-test" style="display:none;"></div>
+            <div class="kpi">
+                <span class="kpi-label">Tests Completed:</span>
+                <span class="kpi-value" id="path2-completed">0 / 50</span>
+            </div>
+            <div class="kpi">
+                <span class="kpi-label">Total Attempts:</span>
+                <span class="kpi-value" id="path2-attempts">0</span>
+            </div>
+            <div class="kpi">
+                <span class="kpi-label">Avg Attempts/Test:</span>
+                <span class="kpi-value" id="path2-avg">0</span>
+            </div>
+            <div class="kpi">
+                <span class="kpi-label">Total Time:</span>
+                <span class="kpi-value" id="path2-time">0s</span>
+            </div>
+            <div class="kpi">
+                <span class="kpi-label">Total Tokens:</span>
+                <span class="kpi-value" id="path2-tokens">0</span>
+            </div>
+            <div class="kpi">
+                <span class="kpi-label">Total Cost:</span>
+                <span class="kpi-value" id="path2-cost">$0.000000</span>
             </div>
         </div>
     </div>
+    
+    <div id="winner" class="winner" style="display:none;"></div>
 
     <script>
         let prompts = [];
-        let currentTest = 0;
-        let testsCompleted = 0;
-        let geminiTotal = { count: 0, time: 0, tokens: 0, cost: 0 };
-        let dualTotal = { count: 0, time: 0, tokens: 0, cost: 0, pass: 0 };
+        let path1Total = { completed: 0, attempts: 0, time: 0, tokens: 0, cost: 0 };
+        let path2Total = { completed: 0, attempts: 0, time: 0, tokens: 0, cost: 0 };
         
-        // Load prompts and create dots on page load
+        // Load prompts and create dots
         fetch('/api/prompts')
             .then(r => r.json())
             .then(data => {
@@ -189,134 +211,129 @@
             });
         
         function createDots() {
-            const dotsContainer = document.getElementById('dots');
+            const path1Container = document.getElementById('dots-path1');
+            const path2Container = document.getElementById('dots-path2');
+            
             for (let i = 0; i < 50; i++) {
-                const dot = document.createElement('div');
-                dot.className = 'dot';
-                dot.id = 'dot-' + i;
-                dotsContainer.appendChild(dot);
+                const dot1 = document.createElement('div');
+                dot1.className = 'dot';
+                dot1.id = 'dot-path1-' + i;
+                path1Container.appendChild(dot1);
+                
+                const dot2 = document.createElement('div');
+                dot2.className = 'dot';
+                dot2.id = 'dot-path2-' + i;
+                path2Container.appendChild(dot2);
             }
         }
         
-        async function runAllTests() {
+        async function runExperiment() {
             document.getElementById('startBtn').disabled = true;
-            currentTest = 0;
-            testsCompleted = 0;
-            geminiTotal = { count: 0, time: 0, tokens: 0, cost: 0 };
-            dualTotal = { count: 0, time: 0, tokens: 0, cost: 0, pass: 0 };
-            
-            document.getElementById('gemini-status').textContent = 'Running...';
-            document.getElementById('dual-status').textContent = 'Running...';
+            path1Total = { completed: 0, attempts: 0, time: 0, tokens: 0, cost: 0 };
+            path2Total = { completed: 0, attempts: 0, time: 0, tokens: 0, cost: 0 };
+            document.getElementById('winner').style.display = 'none';
             
             for (let i = 0; i < prompts.length; i++) {
-                currentTest = i;
-                await runSingleTest(prompts[i], i);
-                await sleep(1000); // 1 second delay between tests
+                await runBothPaths(prompts[i], i);
+                await sleep(500);
             }
             
-            document.getElementById('gemini-status').textContent = 'Complete!';
-            document.getElementById('dual-status').textContent = 'Complete!';
+            showWinner();
             document.getElementById('startBtn').disabled = false;
         }
         
-        async function runSingleTest(prompt, index) {
+        async function runBothPaths(promptData, index) {
+            // Mark both as running
+            document.getElementById('dot-path1-' + index).className = 'dot running';
+            document.getElementById('dot-path2-' + index).className = 'dot running';
+            
             // Show current test
-            document.getElementById('gemini-current').style.display = 'block';
-            document.getElementById('gemini-current').textContent = `Test ${index + 1}: ${prompt.substring(0, 50)}...`;
-            document.getElementById('dual-current').style.display = 'block';
-            document.getElementById('dual-current').textContent = `Test ${index + 1}: ${prompt.substring(0, 50)}...`;
+            const shortPrompt = promptData.prompt.substring(0, 50) + '...';
+            document.getElementById('path1-current').style.display = 'block';
+            document.getElementById('path1-current').textContent = `Test ${index + 1}: ${shortPrompt}`;
+            document.getElementById('path2-current').style.display = 'block';
+            document.getElementById('path2-current').textContent = `Test ${index + 1}: ${shortPrompt}`;
             
-            let attempts = 0;
-            let validationPassed = false;
-            
-            while (!validationPassed && attempts < 10) {  // Max 10 retries
-                attempts++;
+            // Run both paths in parallel
+            const [result1, result2] = await Promise.all([
+                fetch('/api/path1', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(promptData)
+                }).then(r => r.json()),
                 
-                try {
-                    // Run both paths in parallel
-                    const [geminiResult, dualResult] = await Promise.all([
-                        fetch('/api/gemini', {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({prompt})
-                        }).then(r => r.json()),
-                        
-                        fetch('/api/dual', {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({prompt})
-                        }).then(r => r.json())
-                    ]);
-                    
-                    // Update gemini totals
-                    geminiTotal.count++;
-                    geminiTotal.time += geminiResult.time;
-                    geminiTotal.tokens += geminiResult.gemini_in + geminiResult.gemini_out;
-                    geminiTotal.cost += geminiResult.cost;
-                    
-                    // Update dual totals
-                    dualTotal.count++;
-                    dualTotal.time += dualResult.time;
-                    dualTotal.tokens += dualResult.gemini_in + dualResult.gemini_out + dualResult.openai_in + dualResult.openai_out;
-                    dualTotal.cost += dualResult.total_cost;
-                    
-                    // Check validation
-                    try {
-                        const validation = JSON.parse(dualResult.validation);
-                        if (validation.valid) {
-                            validationPassed = true;
-                            dualTotal.pass++;
-                            document.getElementById('dot-' + index).className = 'dot success';
-                        } else {
-                            // Failed validation - show red temporarily, will retry
-                            document.getElementById('dot-' + index).className = 'dot fail';
-                            document.getElementById('dual-current').textContent = `Test ${index + 1}: Retry ${attempts}... ${prompt.substring(0, 40)}...`;
-                        }
-                    } catch {
-                        // Parse error - retry
-                        document.getElementById('dot-' + index).className = 'dot fail';
-                        document.getElementById('dual-current').textContent = `Test ${index + 1}: Retry ${attempts}... ${prompt.substring(0, 40)}...`;
-                    }
-                    
-                    // Update displays
-                    updateDisplay();
-                    
-                    // Small delay before retry
-                    if (!validationPassed && attempts < 10) {
-                        await sleep(500);
-                    }
-                    
-                } catch (error) {
-                    console.error('Test failed:', error);
-                    // Still retry on error
-                    await sleep(500);
-                }
+                fetch('/api/path2', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(promptData)
+                }).then(r => r.json())
+            ]);
+            
+            // Update Path 1
+            path1Total.completed++;
+            path1Total.attempts += result1.attempts;
+            path1Total.time += result1.total_time;
+            path1Total.tokens += result1.total_tokens;
+            path1Total.cost += result1.total_cost;
+            
+            if (result1.passed) {
+                document.getElementById('dot-path1-' + index).className = 'dot success';
+            } else {
+                document.getElementById('dot-path1-' + index).className = 'dot fail';
             }
             
-            // If still failed after 10 attempts, mark as failed
-            if (!validationPassed) {
-                document.getElementById('dot-' + index).className = 'dot fail';
+            // Update Path 2
+            path2Total.completed++;
+            path2Total.attempts += result2.attempts;
+            path2Total.time += result2.total_time;
+            path2Total.tokens += result2.total_tokens;
+            path2Total.cost += result2.total_cost;
+            
+            if (result2.passed) {
+                document.getElementById('dot-path2-' + index).className = 'dot success';
+            } else {
+                document.getElementById('dot-path2-' + index).className = 'dot fail';
             }
             
-            testsCompleted++;
             updateDisplay();
         }
         
         function updateDisplay() {
-            // Gemini stats
-            document.getElementById('gemini-count').textContent = `${testsCompleted} / 50`;
-            document.getElementById('gemini-time').textContent = geminiTotal.time.toFixed(2) + 's';
-            document.getElementById('gemini-tokens').textContent = geminiTotal.tokens;
-            document.getElementById('gemini-cost').textContent = '$' + geminiTotal.cost.toFixed(6);
-            document.getElementById('gemini-attempts').textContent = geminiTotal.count;
+            // Path 1
+            document.getElementById('path1-completed').textContent = `${path1Total.completed} / 50`;
+            document.getElementById('path1-attempts').textContent = path1Total.attempts;
+            document.getElementById('path1-avg').textContent = path1Total.completed > 0 ? 
+                (path1Total.attempts / path1Total.completed).toFixed(1) : '0';
+            document.getElementById('path1-time').textContent = path1Total.time.toFixed(2) + 's';
+            document.getElementById('path1-tokens').textContent = path1Total.tokens;
+            document.getElementById('path1-cost').textContent = '$' + path1Total.cost.toFixed(6);
             
-            // Dual stats
-            document.getElementById('dual-count').textContent = `${testsCompleted} / 50`;
-            document.getElementById('dual-time').textContent = dualTotal.time.toFixed(2) + 's';
-            document.getElementById('dual-tokens').textContent = dualTotal.tokens;
-            document.getElementById('dual-cost').textContent = '$' + dualTotal.cost.toFixed(6);
-            document.getElementById('dual-pass').textContent = dualTotal.pass;
-            document.getElementById('dual-attempts').textContent = dualTotal.count;
+            // Path 2
+            document.getElementById('path2-completed').textContent = `${path2Total.completed} / 50`;
+            document.getElementById('path2-attempts').textContent = path2Total.attempts;
+            document.getElementById('path2-avg').textContent = path2Total.completed > 0 ? 
+                (path2Total.attempts / path2Total.completed).toFixed(1) : '0';
+            document.getElementById('path2-time').textContent = path2Total.time.toFixed(2) + 's';
+            document.getElementById('path2-tokens').textContent = path2Total.tokens;
+            document.getElementById('path2-cost').textContent = '$' + path2Total.cost.toFixed(6);
+        }
+        
+        function showWinner() {
+            const winnerDiv = document.getElementById('winner');
+            winnerDiv.style.display = 'block';
+            
+            const costDiff = ((path2Total.cost - path1Total.cost) / path1Total.cost * 100).toFixed(1);
+            const attemptDiff = ((path2Total.attempts - path1Total.attempts) / path1Total.attempts * 100).toFixed(1);
+            
+            if (path2Total.cost < path1Total.cost) {
+                winnerDiv.innerHTML = `🏆 PATH 2 WINS! ${Math.abs(costDiff)}% CHEAPER<br>
+                    Path 2: $${path2Total.cost.toFixed(6)} vs Path 1: $${path1Total.cost.toFixed(6)}<br>
+                    Path 2 used ${attemptDiff > 0 ? '+' : ''}${attemptDiff}% ${attemptDiff > 0 ? 'more' : 'fewer'} attempts`;
+            } else {
+                winnerDiv.innerHTML = `🏆 PATH 1 WINS! ${Math.abs(costDiff)}% CHEAPER<br>
+                    Path 1: $${path1Total.cost.toFixed(6)} vs Path 2: $${path2Total.cost.toFixed(6)}<br>
+                    Path 1 used ${Math.abs(attemptDiff)}% fewer attempts`;
+            }
         }
         
         function sleep(ms) {
