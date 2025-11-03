@@ -20,14 +20,21 @@ def home():
 
 @app.route('/api/gemini', methods=['POST'])
 def gemini_only():
-    prompt = request.json['prompt']
+    user_prompt = request.json['prompt']
     start = time.time()
     
-    response = gemini.generate_content(prompt)
+    # Proper prompt for Gemini to generate code
+    full_prompt = f"""You are a code generator. Generate clean, working code based on the requirement below.
+
+Requirement: {user_prompt}
+
+Generate only the code, no explanations."""
+    
+    response = gemini.generate_content(full_prompt)
     code = response.text
     
     elapsed = time.time() - start
-    in_tokens = count_tokens(prompt)
+    in_tokens = count_tokens(full_prompt)
     out_tokens = count_tokens(code)
     cost = 0  # Gemini 2.5 Flash is free
     
@@ -41,24 +48,36 @@ def gemini_only():
 
 @app.route('/api/dual', methods=['POST'])
 def gemini_plus_openai():
-    prompt = request.json['prompt']
+    user_prompt = request.json['prompt']
     start = time.time()
     
-    # Step 1: Gemini generates
-    response = gemini.generate_content(prompt)
+    # Step 1: Gemini generates code with proper prompt
+    generation_prompt = f"""You are a code generator. Generate clean, working code based on the requirement below.
+
+Requirement: {user_prompt}
+
+Generate only the code, no explanations."""
+    
+    response = gemini.generate_content(generation_prompt)
     code = response.text
     gemini_time = time.time() - start
     
-    # Step 2: OpenAI validates
-    validation_prompt = f"""Check if this code meets the requirement.
-    
-Requirement: {prompt}
+    # Step 2: OpenAI validates with proper prompt
+    validation_prompt = f"""You are a code validator. Your ONLY task is to check if the generated code matches the requirement.
 
-Code:
+REQUIREMENT:
+{user_prompt}
+
+GENERATED CODE:
 {code}
 
-Respond with JSON only:
-{{"valid": true/false, "reason": "why"}}"""
+Check line by line:
+1. Does the code fulfill the requirement?
+2. Is the code complete (no missing parts)?
+3. Are there obvious errors?
+
+Respond ONLY with JSON:
+{{"valid": true or false, "reason": "brief explanation"}}"""
     
     openai_start = time.time()
     validation = openai_client.chat.completions.create(
@@ -71,7 +90,7 @@ Respond with JSON only:
     validation_text = validation.choices[0].message.content
     
     elapsed = time.time() - start
-    gemini_in = count_tokens(prompt)
+    gemini_in = count_tokens(generation_prompt)
     gemini_out = count_tokens(code)
     openai_in = count_tokens(validation_prompt)
     openai_out = count_tokens(validation_text)
