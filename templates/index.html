@@ -38,11 +38,19 @@
         
         .path-label {
             font-weight: bold;
-            margin-bottom: 10px;
-            font-size: 16px;
+            margin-bottom: 15px;
+            font-size: 18px;
+            padding: 10px;
+            border-radius: 4px;
         }
-        .path1-label { color: #4285f4; }
-        .path2-label { color: #ea4335; }
+        .path1-label { 
+            color: #4285f4; 
+            background: #e3f2fd;
+        }
+        .path2-label { 
+            color: #ea4335;
+            background: #ffebee;
+        }
         
         .dots {
             display: flex;
@@ -128,11 +136,15 @@
     </div>
     
     <div class="progress-section">
-        <div class="path-label path1-label">Path 1: Gemini → Unit Test (retry until pass)</div>
-        <div class="dots" id="dots-path1"></div>
+        <div style="margin-bottom: 40px; padding-bottom: 30px; border-bottom: 2px dashed #ddd;">
+            <div class="path-label path1-label">● PATH 1: Gemini → Unit Test (retry until pass)</div>
+            <div class="dots" id="dots-path1"></div>
+        </div>
         
-        <div class="path-label path2-label">Path 2: Gemini → OpenAI → Unit Test (retry until pass)</div>
-        <div class="dots" id="dots-path2"></div>
+        <div>
+            <div class="path-label path2-label">● PATH 2: Gemini → OpenAI → Unit Test (retry until pass)</div>
+            <div class="dots" id="dots-path2"></div>
+        </div>
     </div>
     
     <div class="results">
