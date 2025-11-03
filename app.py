@@ -8,8 +8,14 @@ app = Flask(__name__)
 
 # Setup
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
-gemini = genai.GenerativeModel('gemini-2.0-flash-exp')
+gemini = genai.GenerativeModel('gemini-pro')  # PAID MODEL
 openai_client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+
+# Pricing per 1M tokens
+GEMINI_INPUT_COST = 0.50 / 1_000_000    # $0.50 per 1M input
+GEMINI_OUTPUT_COST = 1.50 / 1_000_000   # $1.50 per 1M output
+OPENAI_INPUT_COST = 0.150 / 1_000_000
+OPENAI_OUTPUT_COST = 0.600 / 1_000_000
 
 def count_tokens(text):
     return int(len(text.split()) * 1.3)
@@ -36,7 +42,7 @@ Generate only the code, no explanations."""
     elapsed = time.time() - start
     in_tokens = count_tokens(full_prompt)
     out_tokens = count_tokens(code)
-    cost = 0  # Gemini 2.5 Flash is free
+    cost = (in_tokens * GEMINI_INPUT_COST) + (out_tokens * GEMINI_OUTPUT_COST)
     
     return jsonify({
         'code': code,
@@ -95,8 +101,8 @@ Respond ONLY with JSON:
     openai_in = count_tokens(validation_prompt)
     openai_out = count_tokens(validation_text)
     
-    gemini_cost = 0  # Free
-    openai_cost = (openai_in * 0.15 + openai_out * 0.60) / 1_000_000
+    gemini_cost = (gemini_in * GEMINI_INPUT_COST) + (gemini_out * GEMINI_OUTPUT_COST)
+    openai_cost = (openai_in * OPENAI_INPUT_COST) + (openai_out * OPENAI_OUTPUT_COST)
     
     return jsonify({
         'code': code,
@@ -108,10 +114,67 @@ Respond ONLY with JSON:
         'gemini_out': gemini_out,
         'openai_in': openai_in,
         'openai_out': openai_out,
-        'gemini_cost': gemini_cost,
+        'gemini_cost': round(gemini_cost, 6),
         'openai_cost': round(openai_cost, 6),
-        'total_cost': round(openai_cost, 6)
+        'total_cost': round(gemini_cost + openai_cost, 6)
     })
+
+@app.route('/api/prompts', methods=['GET'])
+def get_prompts():
+    """Return all 50 test prompts"""
+    prompts = [
+        "Write a Python function to check if a number is even",
+        "Write a function to reverse a string",
+        "Write a function to find max of three numbers",
+        "Write a function to calculate factorial",
+        "Write a function to check if string is palindrome",
+        "Write a function to count vowels in a string",
+        "Write a function to convert Celsius to Fahrenheit",
+        "Write a function to check if year is leap year",
+        "Write a function to find sum of list",
+        "Write a function to remove duplicates from list",
+        "Write a function to check if string has only digits",
+        "Write a function to find second largest in list",
+        "Write a function to generate random number in range",
+        "Write a function to capitalize first letter",
+        "Write a function to calculate area of circle",
+        "Write a Python class for a library system with add and search",
+        "Write a Flask API endpoint for user login with JWT",
+        "Write a function to parse CSV and return dictionaries",
+        "Write a debounce function in JavaScript",
+        "Write a Python decorator to measure execution time",
+        "Write a function to implement binary search",
+        "Write a function to validate email with regex",
+        "Write a Python class for banking with deposit and withdraw",
+        "Write a function to convert JSON to XML",
+        "Write a function to compress files with gzip",
+        "Write a Python function to send email via SMTP",
+        "Write a function to parse JWT tokens",
+        "Write a cache class with LRU eviction",
+        "Write a function to calculate Levenshtein distance",
+        "Write a function to implement rate limiting",
+        "Write a function to connect to PostgreSQL safely",
+        "Write a Python script to scrape website prices",
+        "Write a function for infinite scroll pagination",
+        "Write a function to monitor API health",
+        "Write a function for drag and drop in JavaScript",
+        "Write a merge sort implementation in Python",
+        "Write a Flask API with auth and CRUD using SQLAlchemy",
+        "Write a thread-safe singleton class in Python",
+        "Write a function to solve N-Queens using backtracking",
+        "Write Dijkstra's shortest path with priority queue",
+        "Write a basic blockchain with proof of work",
+        "Write a trie data structure with autocomplete",
+        "Write a connection pool with health checks",
+        "Write A* pathfinding for grid navigation",
+        "Write a WebSocket chat server with rooms",
+        "Write a distributed task queue with Redis",
+        "Write a virtual DOM diffing algorithm",
+        "Write a microservice with Docker compose",
+        "Write a React component with real-time editing",
+        "Write a CI/CD pipeline in GitHub Actions YAML"
+    ]
+    return jsonify({'prompts': prompts})
 
 if __name__ == '__main__':
     app.run(port=8080, debug=True)
