@@ -1,0 +1,7 @@
+__pycache__
+*.pyc
+.env
+test_runner.py
+results.json
+README.md
+.git
