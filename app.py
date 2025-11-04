@@ -277,378 +277,364 @@ Respond ONLY with JSON:
 
 @app.route('/api/prompts', methods=['GET'])
 def get_prompts():
-    """Return 50 prompts: 10 base problems with 5 HARD modifications each"""
+    """Return 50 prompts: 10 base problems with 5 MESSY human-style modifications each"""
     prompts = [
-        # PROBLEM 1: Even checker - 5 variations
+        # PROBLEM 1: Even checker
         {
-            'prompt': 'Write a Python function called is_even that checks if a number is even',
+            'prompt': 'write a function to check if a number is even',
             'test_cases': [
                 {'function': 'is_even', 'input': 4, 'expected': True},
                 {'function': 'is_even', 'input': 7, 'expected': False}
             ]
         },
         {
-            'prompt': 'Write a Python function called is_even that checks if a number is even. But return False for 0 (zero is special case)',
+            'prompt': 'no wait i need it called is_even, and also what about zero',
             'test_cases': [
-                {'function': 'is_even', 'input': 0, 'expected': False},
-                {'function': 'is_even', 'input': 4, 'expected': True},
-                {'function': 'is_even', 'input': 7, 'expected': False}
+                {'function': 'is_even', 'input': 0, 'expected': True},
+                {'function': 'is_even', 'input': 4, 'expected': True}
             ]
         },
         {
-            'prompt': 'Write a Python function called is_even. Return True only if number is even AND positive. Negative evens return False',
+            'prompt': 'actually can you make it return 1 or 0 instead, not the boolean thing',
             'test_cases': [
-                {'function': 'is_even', 'input': 4, 'expected': True},
-                {'function': 'is_even', 'input': -4, 'expected': False},
-                {'function': 'is_even', 'input': 7, 'expected': False}
-            ]
-        },
-        {
-            'prompt': 'Write a Python function called is_even. Return 1 if even, 0 if odd, but return -1 if number is divisible by 4',
-            'test_cases': [
-                {'function': 'is_even', 'input': 8, 'expected': -1},
-                {'function': 'is_even', 'input': 6, 'expected': 1},
+                {'function': 'is_even', 'input': 4, 'expected': 1},
                 {'function': 'is_even', 'input': 7, 'expected': 0}
             ]
         },
         {
-            'prompt': 'Write a Python function called is_even. Return True for even numbers except multiples of 10 (return False for those)',
+            'prompt': 'hmm but negatives are weird, fix that so it works properly',
             'test_cases': [
-                {'function': 'is_even', 'input': 20, 'expected': False},
-                {'function': 'is_even', 'input': 8, 'expected': True},
+                {'function': 'is_even', 'input': -4, 'expected': 1},
+                {'function': 'is_even', 'input': -3, 'expected': 0}
+            ]
+        },
+        {
+            'prompt': 'no go back to true/false but keep it working for negatives',
+            'test_cases': [
+                {'function': 'is_even', 'input': -4, 'expected': True},
                 {'function': 'is_even', 'input': 7, 'expected': False}
             ]
         },
         
-        # PROBLEM 2: String reverser - 5 variations
+        # PROBLEM 2: String reverser
         {
-            'prompt': 'Write a Python function called reverse_string that reverses a string',
+            'prompt': 'i need a function that reverses a string',
             'test_cases': [
                 {'function': 'reverse_string', 'input': 'hello', 'expected': 'olleh'}
             ]
         },
         {
-            'prompt': 'Write a Python function called reverse_string that reverses a string. But keep the first character in place, only reverse the rest',
+            'prompt': 'no thats not right, keep first letter where it is',
             'test_cases': [
                 {'function': 'reverse_string', 'input': 'hello', 'expected': 'holle'},
-                {'function': 'reverse_string', 'input': 'abc', 'expected': 'acb'}
+                {'function': 'reverse_string', 'input': 'test', 'expected': 'tset'}
             ]
         },
         {
-            'prompt': 'Write a Python function called reverse_string. Reverse it but convert vowels to uppercase and consonants to lowercase',
+            'prompt': 'wait make it uppercase too',
             'test_cases': [
-                {'function': 'reverse_string', 'input': 'Hello', 'expected': 'OllEh'},
-                {'function': 'reverse_string', 'input': 'test', 'expected': 'tsEt'}
+                {'function': 'reverse_string', 'input': 'hello', 'expected': 'HOLLE'}
             ]
         },
         {
-            'prompt': 'Write a Python function called reverse_string. Reverse every other character only (positions 1,3,5...), keep rest same',
+            'prompt': 'no just the vowels uppercase, rest lowercase',
             'test_cases': [
-                {'function': 'reverse_string', 'input': 'abcd', 'expected': 'adcb'},
-                {'function': 'reverse_string', 'input': 'hello', 'expected': 'holle'}
+                {'function': 'reverse_string', 'input': 'Hello', 'expected': 'hOllE'},
+                {'function': 'reverse_string', 'input': 'TEST', 'expected': 'tsEt'}
             ]
         },
         {
-            'prompt': 'Write a Python function called reverse_string. Reverse but skip any digits, keep them in original position',
+            'prompt': 'actually forget the first letter thing, just do the vowel uppercase thing but reversed',
             'test_cases': [
-                {'function': 'reverse_string', 'input': 'a1b2c', 'expected': 'c1b2a'},
-                {'function': 'reverse_string', 'input': 'hello', 'expected': 'olleh'}
+                {'function': 'reverse_string', 'input': 'hello', 'expected': 'OllEh'}
             ]
         },
         
-        # PROBLEM 3: List sum - 5 variations
+        # PROBLEM 3: List sum
         {
-            'prompt': 'Write a Python function called list_sum that returns sum of a list',
+            'prompt': 'sum all numbers in a list',
             'test_cases': [
                 {'function': 'list_sum', 'input': [[1, 2, 3]], 'expected': 6}
             ]
         },
         {
-            'prompt': 'Write a Python function called list_sum. Sum the list but skip any number that is a multiple of 3',
+            'prompt': 'what if theres negatives, ignore those',
             'test_cases': [
-                {'function': 'list_sum', 'input': [[1, 2, 3, 4]], 'expected': 7},
-                {'function': 'list_sum', 'input': [[6, 1, 9]], 'expected': 1}
+                {'function': 'list_sum', 'input': [[1, -2, 3]], 'expected': 4},
+                {'function': 'list_sum', 'input': [[5, 6]], 'expected': 11}
             ]
         },
         {
-            'prompt': 'Write a Python function called list_sum. Sum only numbers at even indices (0,2,4...), ignore odd indices',
+            'prompt': 'no wait i meant skip numbers divisible by 3, not negatives',
+            'test_cases': [
+                {'function': 'list_sum', 'input': [[1, 3, 5]], 'expected': 6},
+                {'function': 'list_sum', 'input': [[2, 4, 6]], 'expected': 6}
+            ]
+        },
+        {
+            'prompt': 'can you make it only sum the even positions, like 0, 2, 4',
             'test_cases': [
                 {'function': 'list_sum', 'input': [[1, 2, 3, 4, 5]], 'expected': 9},
                 {'function': 'list_sum', 'input': [[10, 1, 5]], 'expected': 15}
             ]
         },
         {
-            'prompt': 'Write a Python function called list_sum. Sum the list but if sum exceeds 10, return 10 instead',
+            'prompt': 'combine both - even positions AND skip multiples of 3',
             'test_cases': [
-                {'function': 'list_sum', 'input': [[5, 8]], 'expected': 10},
-                {'function': 'list_sum', 'input': [[2, 3]], 'expected': 5}
-            ]
-        },
-        {
-            'prompt': 'Write a Python function called list_sum. Sum numbers but subtract the smallest number from the total',
-            'test_cases': [
-                {'function': 'list_sum', 'input': [[5, 2, 8]], 'expected': 13},
-                {'function': 'list_sum', 'input': [[10, 1, 4]], 'expected': 14}
+                {'function': 'list_sum', 'input': [[1, 2, 3, 4, 5, 6, 7]], 'expected': 13},
+                {'function': 'list_sum', 'input': [[6, 1, 9, 2]], 'expected': 0}
             ]
         },
         
-        # PROBLEM 4: Factorial - 5 variations
+        # PROBLEM 4: Find max
         {
-            'prompt': 'Write a Python function called factorial that calculates factorial',
-            'test_cases': [
-                {'function': 'factorial', 'input': 5, 'expected': 120},
-                {'function': 'factorial', 'input': 0, 'expected': 1}
-            ]
-        },
-        {
-            'prompt': 'Write a Python function called factorial. Calculate factorial but multiply result by the input number one extra time',
-            'test_cases': [
-                {'function': 'factorial', 'input': 4, 'expected': 96},
-                {'function': 'factorial', 'input': 3, 'expected': 18}
-            ]
-        },
-        {
-            'prompt': 'Write a Python function called factorial. Calculate factorial but skip multiplying by even numbers in the sequence',
-            'test_cases': [
-                {'function': 'factorial', 'input': 5, 'expected': 15},
-                {'function': 'factorial', 'input': 4, 'expected': 3}
-            ]
-        },
-        {
-            'prompt': 'Write a Python function called factorial. Return factorial but if result is greater than 100, return 100 instead',
-            'test_cases': [
-                {'function': 'factorial', 'input': 5, 'expected': 100},
-                {'function': 'factorial', 'input': 3, 'expected': 6}
-            ]
-        },
-        {
-            'prompt': 'Write a Python function called factorial. Calculate factorial but add the sum of all numbers from 1 to n to the result',
-            'test_cases': [
-                {'function': 'factorial', 'input': 4, 'expected': 34},
-                {'function': 'factorial', 'input': 3, 'expected': 12}
-            ]
-        },
-        
-        # PROBLEM 5: Max finder - 5 variations
-        {
-            'prompt': 'Write a Python function called find_max that returns maximum from a list',
+            'prompt': 'get the biggest number from a list',
             'test_cases': [
                 {'function': 'find_max', 'input': [[1, 5, 3]], 'expected': 5}
             ]
         },
         {
-            'prompt': 'Write a Python function called find_max. Return the maximum but ignore any single-digit numbers (0-9)',
-            'test_cases': [
-                {'function': 'find_max', 'input': [[1, 15, 3]], 'expected': 15},
-                {'function': 'find_max', 'input': [[20, 5, 18]], 'expected': 20}
-            ]
-        },
-        {
-            'prompt': 'Write a Python function called find_max. Return second highest number, not the highest',
+            'prompt': 'what about if i want the second biggest not the biggest',
             'test_cases': [
                 {'function': 'find_max', 'input': [[1, 5, 3]], 'expected': 3},
                 {'function': 'find_max', 'input': [[10, 2, 8]], 'expected': 8}
             ]
         },
         {
-            'prompt': 'Write a Python function called find_max. Return max but only among numbers at odd indices (1,3,5...)',
+            'prompt': 'no back to biggest but dont count single digit numbers',
             'test_cases': [
-                {'function': 'find_max', 'input': [[10, 2, 8, 9]], 'expected': 9},
-                {'function': 'find_max', 'input': [[1, 5, 3, 4]], 'expected': 5}
+                {'function': 'find_max', 'input': [[5, 15, 3]], 'expected': 15},
+                {'function': 'find_max', 'input': [[20, 8, 12]], 'expected': 20}
             ]
         },
         {
-            'prompt': 'Write a Python function called find_max. Return the maximum but subtract 5 if it is greater than 10',
+            'prompt': 'hmm what if theyre all single digits, return the biggest of those then',
             'test_cases': [
-                {'function': 'find_max', 'input': [[1, 15, 3]], 'expected': 10},
-                {'function': 'find_max', 'input': [[1, 8, 3]], 'expected': 8}
+                {'function': 'find_max', 'input': [[1, 5, 3]], 'expected': 5},
+                {'function': 'find_max', 'input': [[20, 8]], 'expected': 20}
+            ]
+        },
+        {
+            'prompt': 'actually just make it work for odd positions only, forget that other stuff',
+            'test_cases': [
+                {'function': 'find_max', 'input': [[10, 5, 20, 3]], 'expected': 5},
+                {'function': 'find_max', 'input': [[1, 7, 2, 9]], 'expected': 9}
             ]
         },
         
-        # PROBLEM 6: Vowel counter - 5 variations
+        # PROBLEM 5: Factorial
         {
-            'prompt': 'Write a Python function called count_vowels that counts vowels in a string',
+            'prompt': 'calculate factorial of a number',
+            'test_cases': [
+                {'function': 'factorial', 'input': 5, 'expected': 120},
+                {'function': 'factorial', 'input': 3, 'expected': 6}
+            ]
+        },
+        {
+            'prompt': 'it should work for 0 too, thats 1',
+            'test_cases': [
+                {'function': 'factorial', 'input': 0, 'expected': 1},
+                {'function': 'factorial', 'input': 4, 'expected': 24}
+            ]
+        },
+        {
+            'prompt': 'what about negative numbers, return -1 for those',
+            'test_cases': [
+                {'function': 'factorial', 'input': -5, 'expected': -1},
+                {'function': 'factorial', 'input': 3, 'expected': 6}
+            ]
+        },
+        {
+            'prompt': 'can you skip the even numbers when multiplying',
+            'test_cases': [
+                {'function': 'factorial', 'input': 5, 'expected': 15},
+                {'function': 'factorial', 'input': 4, 'expected': 3}
+            ]
+        },
+        {
+            'prompt': 'no forget that, normal factorial but if result over 100 just return 100',
+            'test_cases': [
+                {'function': 'factorial', 'input': 6, 'expected': 100},
+                {'function': 'factorial', 'input': 4, 'expected': 24}
+            ]
+        },
+        
+        # PROBLEM 6: Vowel counter
+        {
+            'prompt': 'count how many vowels are in a string',
             'test_cases': [
                 {'function': 'count_vowels', 'input': 'hello', 'expected': 2}
             ]
         },
         {
-            'prompt': 'Write a Python function called count_vowels. Count vowels but only lowercase ones, skip uppercase vowels',
+            'prompt': 'make it work for capitals too',
             'test_cases': [
-                {'function': 'count_vowels', 'input': 'hEllo', 'expected': 1},
+                {'function': 'count_vowels', 'input': 'HELLO', 'expected': 2},
+                {'function': 'count_vowels', 'input': 'HeLLo', 'expected': 2}
+            ]
+        },
+        {
+            'prompt': 'wait no, only count lowercase vowels, skip uppercase',
+            'test_cases': [
+                {'function': 'count_vowels', 'input': 'HeLLo', 'expected': 1},
                 {'function': 'count_vowels', 'input': 'HELLO', 'expected': 0}
             ]
         },
         {
-            'prompt': 'Write a Python function called count_vowels. Count vowels but double-count any letter "e"',
+            'prompt': 'also count e twice for some reason',
             'test_cases': [
                 {'function': 'count_vowels', 'input': 'hello', 'expected': 3},
                 {'function': 'count_vowels', 'input': 'test', 'expected': 2}
             ]
         },
         {
-            'prompt': 'Write a Python function called count_vowels. Count vowels but only at even positions (0,2,4...)',
-            'test_cases': [
-                {'function': 'count_vowels', 'input': 'hello', 'expected': 1},
-                {'function': 'count_vowels', 'input': 'aeiou', 'expected': 3}
-            ]
-        },
-        {
-            'prompt': 'Write a Python function called count_vowels. Count vowels but if there are more than 3, return 3 (max 3)',
+            'prompt': 'no go back, all vowels normal but max is 3, dont go above 3',
             'test_cases': [
                 {'function': 'count_vowels', 'input': 'aeiou', 'expected': 3},
                 {'function': 'count_vowels', 'input': 'hello', 'expected': 2}
             ]
         },
         
-        # PROBLEM 7: Palindrome checker - 5 variations
+        # PROBLEM 7: Palindrome
         {
-            'prompt': 'Write a Python function called is_palindrome that checks if string is palindrome',
+            'prompt': 'check if a string is a palindrome',
             'test_cases': [
                 {'function': 'is_palindrome', 'input': 'racecar', 'expected': True},
                 {'function': 'is_palindrome', 'input': 'hello', 'expected': False}
             ]
         },
         {
-            'prompt': 'Write a Python function called is_palindrome. Check palindrome but ignore spaces and punctuation',
+            'prompt': 'spaces should be ignored',
             'test_cases': [
                 {'function': 'is_palindrome', 'input': 'race car', 'expected': True},
-                {'function': 'is_palindrome', 'input': 'a man a', 'expected': True},
                 {'function': 'is_palindrome', 'input': 'hello', 'expected': False}
             ]
         },
         {
-            'prompt': 'Write a Python function called is_palindrome. Return True only if it is palindrome AND has even length',
+            'prompt': 'and capitals shouldnt matter either',
+            'test_cases': [
+                {'function': 'is_palindrome', 'input': 'RaceCar', 'expected': True},
+                {'function': 'is_palindrome', 'input': 'Hello', 'expected': False}
+            ]
+        },
+        {
+            'prompt': 'actually only return true if its palindrome AND even length',
             'test_cases': [
                 {'function': 'is_palindrome', 'input': 'abba', 'expected': True},
-                {'function': 'is_palindrome', 'input': 'racecar', 'expected': False},
-                {'function': 'is_palindrome', 'input': 'hello', 'expected': False}
+                {'function': 'is_palindrome', 'input': 'racecar', 'expected': False}
             ]
         },
         {
-            'prompt': 'Write a Python function called is_palindrome. Check palindrome ignoring first and last characters',
+            'prompt': 'no forget length, but ignore first and last characters when checking',
             'test_cases': [
                 {'function': 'is_palindrome', 'input': 'xracecary', 'expected': True},
                 {'function': 'is_palindrome', 'input': 'hello', 'expected': False}
             ]
         },
-        {
-            'prompt': 'Write a Python function called is_palindrome. Return True if palindrome OR if length is 1, otherwise False',
-            'test_cases': [
-                {'function': 'is_palindrome', 'input': 'a', 'expected': True},
-                {'function': 'is_palindrome', 'input': 'racecar', 'expected': True},
-                {'function': 'is_palindrome', 'input': 'ab', 'expected': False}
-            ]
-        },
         
-        # PROBLEM 8: List duplicates remover - 5 variations
+        # PROBLEM 8: Remove duplicates
         {
-            'prompt': 'Write a Python function called remove_duplicates that removes duplicates from list',
+            'prompt': 'remove duplicate numbers from a list',
             'test_cases': [
                 {'function': 'remove_duplicates', 'input': [[1, 2, 2, 3]], 'expected': [1, 2, 3]}
             ]
         },
         {
-            'prompt': 'Write a Python function called remove_duplicates. Remove duplicates but keep numbers that appear exactly twice',
+            'prompt': 'can you sort it too',
             'test_cases': [
-                {'function': 'remove_duplicates', 'input': [[1, 2, 2, 3, 3, 3]], 'expected': [1, 2, 2]},
+                {'function': 'remove_duplicates', 'input': [[3, 1, 2, 2]], 'expected': [1, 2, 3]}
+            ]
+        },
+        {
+            'prompt': 'wait keep only numbers that appear exactly twice',
+            'test_cases': [
+                {'function': 'remove_duplicates', 'input': [[1, 2, 2, 3, 3, 3]], 'expected': [2, 2]},
                 {'function': 'remove_duplicates', 'input': [[5, 5, 4]], 'expected': [5, 5]}
             ]
         },
         {
-            'prompt': 'Write a Python function called remove_duplicates. Remove duplicates but only keep numbers greater than 5',
+            'prompt': 'no back to removing duplicates but also filter out anything under 5',
             'test_cases': [
                 {'function': 'remove_duplicates', 'input': [[1, 7, 7, 3, 8]], 'expected': [7, 8]},
                 {'function': 'remove_duplicates', 'input': [[10, 10, 2]], 'expected': [10]}
             ]
         },
         {
-            'prompt': 'Write a Python function called remove_duplicates. Remove duplicates and return in reverse order',
+            'prompt': 'ok normal duplicate removal but reverse the order of the result',
             'test_cases': [
-                {'function': 'remove_duplicates', 'input': [[1, 2, 2, 3]], 'expected': [3, 2, 1]},
-                {'function': 'remove_duplicates', 'input': [[5, 1, 5]], 'expected': [1, 5]}
-            ]
-        },
-        {
-            'prompt': 'Write a Python function called remove_duplicates. Remove duplicates but multiply each unique number by 2',
-            'test_cases': [
-                {'function': 'remove_duplicates', 'input': [[1, 2, 2, 3]], 'expected': [2, 4, 6]},
-                {'function': 'remove_duplicates', 'input': [[5, 5]], 'expected': [10]}
+                {'function': 'remove_duplicates', 'input': [[1, 2, 2, 3]], 'expected': [3, 2, 1]}
             ]
         },
         
-        # PROBLEM 9: Temperature converter - 5 variations
+        # PROBLEM 9: Temperature
         {
-            'prompt': 'Write a Python function called celsius_to_fahrenheit that converts Celsius to Fahrenheit',
+            'prompt': 'convert celsius to fahrenheit',
             'test_cases': [
                 {'function': 'celsius_to_fahrenheit', 'input': 0, 'expected': 32.0},
                 {'function': 'celsius_to_fahrenheit', 'input': 100, 'expected': 212.0}
             ]
         },
         {
-            'prompt': 'Write a Python function called celsius_to_fahrenheit. Convert but add 5 degrees if input is negative',
-            'test_cases': [
-                {'function': 'celsius_to_fahrenheit', 'input': -10, 'expected': 19.0},
-                {'function': 'celsius_to_fahrenheit', 'input': 0, 'expected': 32.0}
-            ]
-        },
-        {
-            'prompt': 'Write a Python function called celsius_to_fahrenheit. Convert but return only integer part (no decimals)',
+            'prompt': 'round it to whole numbers',
             'test_cases': [
                 {'function': 'celsius_to_fahrenheit', 'input': 25, 'expected': 77},
                 {'function': 'celsius_to_fahrenheit', 'input': 30, 'expected': 86}
             ]
         },
         {
-            'prompt': 'Write a Python function called celsius_to_fahrenheit. Convert but if result is above 100F, return 100',
+            'prompt': 'if its negative input add 5 to the result',
             'test_cases': [
-                {'function': 'celsius_to_fahrenheit', 'input': 50, 'expected': 100},
-                {'function': 'celsius_to_fahrenheit', 'input': 20, 'expected': 68.0}
+                {'function': 'celsius_to_fahrenheit', 'input': -10, 'expected': 19},
+                {'function': 'celsius_to_fahrenheit', 'input': 0, 'expected': 32}
             ]
         },
         {
-            'prompt': 'Write a Python function called celsius_to_fahrenheit. Convert but subtract 10 from result if input is even number',
+            'prompt': 'wait no, cap it at 100 max, dont go above that',
             'test_cases': [
-                {'function': 'celsius_to_fahrenheit', 'input': 0, 'expected': 22.0},
-                {'function': 'celsius_to_fahrenheit', 'input': 100, 'expected': 202.0},
-                {'function': 'celsius_to_fahrenheit', 'input': 25, 'expected': 77.0}
+                {'function': 'celsius_to_fahrenheit', 'input': 50, 'expected': 100},
+                {'function': 'celsius_to_fahrenheit', 'input': 20, 'expected': 68}
+            ]
+        },
+        {
+            'prompt': 'actually remove the cap but subtract 10 if input is even',
+            'test_cases': [
+                {'function': 'celsius_to_fahrenheit', 'input': 0, 'expected': 22},
+                {'function': 'celsius_to_fahrenheit', 'input': 100, 'expected': 202},
+                {'function': 'celsius_to_fahrenheit', 'input': 25, 'expected': 77}
             ]
         },
         
-        # PROBLEM 10: Prime checker - 5 variations
+        # PROBLEM 10: Prime checker
         {
-            'prompt': 'Write a Python function called is_prime that checks if number is prime',
+            'prompt': 'check if number is prime',
             'test_cases': [
                 {'function': 'is_prime', 'input': 7, 'expected': True},
                 {'function': 'is_prime', 'input': 4, 'expected': False}
             ]
         },
         {
-            'prompt': 'Write a Python function called is_prime. Check if prime but return False if number is 2 (exception)',
+            'prompt': 'what about 2, thats prime right',
             'test_cases': [
-                {'function': 'is_prime', 'input': 2, 'expected': False},
-                {'function': 'is_prime', 'input': 7, 'expected': True},
-                {'function': 'is_prime', 'input': 4, 'expected': False}
+                {'function': 'is_prime', 'input': 2, 'expected': True},
+                {'function': 'is_prime', 'input': 7, 'expected': True}
             ]
         },
         {
-            'prompt': 'Write a Python function called is_prime. Return True if prime AND greater than 10, else False',
+            'prompt': 'and negatives should return false',
+            'test_cases': [
+                {'function': 'is_prime', 'input': -7, 'expected': False},
+                {'function': 'is_prime', 'input': 7, 'expected': True}
+            ]
+        },
+        {
+            'prompt': 'actually only return true if prime AND bigger than 10',
             'test_cases': [
                 {'function': 'is_prime', 'input': 11, 'expected': True},
-                {'function': 'is_prime', 'input': 7, 'expected': False},
-                {'function': 'is_prime', 'input': 4, 'expected': False}
+                {'function': 'is_prime', 'input': 7, 'expected': False}
             ]
         },
         {
-            'prompt': 'Write a Python function called is_prime. Check if prime but also return True if number is perfect square',
-            'test_cases': [
-                {'function': 'is_prime', 'input': 9, 'expected': True},
-                {'function': 'is_prime', 'input': 7, 'expected': True},
-                {'function': 'is_prime', 'input': 6, 'expected': False}
-            ]
-        },
-        {
-            'prompt': 'Write a Python function called is_prime. Return True if prime, but False if sum of digits is even',
+            'prompt': 'no forget that, normal prime check but false if the digits add up to an even number',
             'test_cases': [
                 {'function': 'is_prime', 'input': 13, 'expected': False},
                 {'function': 'is_prime', 'input': 11, 'expected': True},
