@@ -151,6 +151,7 @@
         <div class="panel path1">
             <h2>Path 1: Gemini Only</h2>
             <div id="path1-current" class="current-test" style="display:none;"></div>
+            <div id="path1-code" style="background:#f5f5f5;padding:10px;margin:10px 0;border-radius:4px;font-family:monospace;font-size:11px;max-height:150px;overflow-y:auto;display:none;white-space:pre-wrap;"></div>
             <div class="kpi">
                 <span class="kpi-label">Tests Completed:</span>
                 <span class="kpi-value" id="path1-completed">0 / 50</span>
@@ -180,6 +181,7 @@
         <div class="panel path2">
             <h2>Path 2: Gemini + OpenAI</h2>
             <div id="path2-current" class="current-test" style="display:none;"></div>
+            <div id="path2-code" style="background:#f5f5f5;padding:10px;margin:10px 0;border-radius:4px;font-family:monospace;font-size:11px;max-height:150px;overflow-y:auto;display:none;white-space:pre-wrap;"></div>
             <div class="kpi">
                 <span class="kpi-label">Tests Completed:</span>
                 <span class="kpi-value" id="path2-completed">0 / 50</span>
@@ -213,6 +215,8 @@
         let prompts = [];
         let path1Total = { completed: 0, attempts: 0, time: 0, tokens: 0, cost: 0 };
         let path2Total = { completed: 0, attempts: 0, time: 0, tokens: 0, cost: 0 };
+        let path1History = [];
+        let path2History = [];
         
         // Load prompts and create dots
         fetch('/api/prompts')
@@ -243,9 +247,17 @@
             document.getElementById('startBtn').disabled = true;
             path1Total = { completed: 0, attempts: 0, time: 0, tokens: 0, cost: 0 };
             path2Total = { completed: 0, attempts: 0, time: 0, tokens: 0, cost: 0 };
+            path1History = [];
+            path2History = [];
             document.getElementById('winner').style.display = 'none';
             
             for (let i = 0; i < prompts.length; i++) {
+                // Reset history every 5 prompts (new problem set)
+                if (i % 5 === 0) {
+                    path1History = [];
+                    path2History = [];
+                }
+                
                 await runBothPaths(prompts[i], i);
                 await sleep(500);
             }
@@ -266,20 +278,40 @@
             document.getElementById('path2-current').style.display = 'block';
             document.getElementById('path2-current').textContent = `Test ${index + 1}: ${shortPrompt}`;
             
-            // Run both paths in parallel
+            // Run both paths in parallel with conversation history
             const [result1, result2] = await Promise.all([
                 fetch('/api/path1', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(promptData)
+                    body: JSON.stringify({
+                        ...promptData,
+                        conversation_history: path1History
+                    })
                 }).then(r => r.json()),
                 
                 fetch('/api/path2', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(promptData)
+                    body: JSON.stringify({
+                        ...promptData,
+                        conversation_history: path2History
+                    })
                 }).then(r => r.json())
             ]);
+            
+            // Add prompt to history for next iteration
+            path1History.push(promptData.prompt);
+            path2History.push(promptData.prompt);
+            
+            // Display generated code
+            if (result1.final_code) {
+                document.getElementById('path1-code').style.display = 'block';
+                document.getElementById('path1-code').textContent = result1.final_code;
+            }
+            if (result2.final_code) {
+                document.getElementById('path2-code').style.display = 'block';
+                document.getElementById('path2-code').textContent = result2.final_code;
+            }
             
             // Update Path 1
             path1Total.completed++;
