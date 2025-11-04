@@ -79,29 +79,24 @@ def path1():
     data = request.json
     prompt_text = data['prompt']
     test_cases = data['test_cases']
+    conversation_history = data.get('conversation_history', [])
     
     attempts = []
     passed = False
     max_attempts = 10
+    final_code = ""
     
-    generation_prompt = f"""Generate a Python function that EXACTLY matches this requirement.
-
-Requirement: {prompt_text}
-
-CRITICAL RULES:
-1. Function name must be EXACTLY as specified
-2. Function must handle ALL edge cases
-3. Return type must match expected output
-4. No print statements, no extra functions, no comments
-5. Just the function code
-
-Generate ONLY the function code:"""
+    # Build full prompt with history
+    if conversation_history:
+        full_prompt = "\n\n".join(conversation_history) + "\n\n" + prompt_text
+    else:
+        full_prompt = prompt_text
     
     for attempt in range(max_attempts):
         start = time.time()
         
         # Generate with Gemini
-        response = gemini.generate_content(generation_prompt)
+        response = gemini.generate_content(full_prompt)
         code = response.text.strip()
         
         # Clean markdown if present
@@ -113,7 +108,7 @@ Generate ONLY the function code:"""
         elapsed = time.time() - start
         
         # Calculate costs
-        in_tokens = count_tokens(generation_prompt)
+        in_tokens = count_tokens(full_prompt)
         out_tokens = count_tokens(code)
         cost = (in_tokens * GEMINI_INPUT_COST) + (out_tokens * GEMINI_OUTPUT_COST)
         
@@ -132,7 +127,10 @@ Generate ONLY the function code:"""
         
         if test_passed:
             passed = True
+            final_code = code
             break
+        
+        final_code = code
     
     # Calculate totals
     total_time = sum(a['time'] for a in attempts)
@@ -146,7 +144,8 @@ Generate ONLY the function code:"""
         'total_time': round(total_time, 2),
         'total_tokens': total_tokens,
         'total_cost': round(total_cost, 6),
-        'details': attempts
+        'details': attempts,
+        'final_code': final_code
     })
 
 @app.route('/api/path2', methods=['POST'])
@@ -155,28 +154,23 @@ def path2():
     data = request.json
     prompt_text = data['prompt']
     test_cases = data['test_cases']
+    conversation_history = data.get('conversation_history', [])
     
     attempts = []
     passed = False
     max_attempts = 10
+    final_code = ""
     
-    generation_prompt = f"""Generate a Python function that EXACTLY matches this requirement.
-
-Requirement: {prompt_text}
-
-CRITICAL RULES:
-1. Function name must be EXACTLY as specified
-2. Function must handle ALL edge cases
-3. Return type must match expected output
-4. No print statements, no extra functions, no comments
-5. Just the function code
-
-Generate ONLY the function code:"""
+    # Build full prompt with history
+    if conversation_history:
+        full_prompt = "\n\n".join(conversation_history) + "\n\n" + prompt_text
+    else:
+        full_prompt = prompt_text
     
     for attempt in range(max_attempts):
         # Step 1: Generate with Gemini
         gemini_start = time.time()
-        response = gemini.generate_content(generation_prompt)
+        response = gemini.generate_content(full_prompt)
         code = response.text.strip()
         
         # Clean markdown
@@ -186,22 +180,17 @@ Generate ONLY the function code:"""
             code = code.split('```')[1].split('```')[0].strip()
         
         gemini_time = time.time() - gemini_start
-        gemini_in = count_tokens(generation_prompt)
+        gemini_in = count_tokens(full_prompt)
         gemini_out = count_tokens(code)
         gemini_cost = (gemini_in * GEMINI_INPUT_COST) + (gemini_out * GEMINI_OUTPUT_COST)
         
         # Step 2: OpenAI validates
-        validation_prompt = f"""You are a code validator. Check if this code meets the requirement.
+        validation_prompt = f"""Check if this code is correct for the requirement.
 
 REQUIREMENT: {prompt_text}
 
 CODE:
 {code}
-
-Check:
-1. Does it fulfill the requirement?
-2. Is it complete?
-3. No obvious errors?
 
 Respond ONLY with JSON:
 {{"valid": true or false, "reason": "brief"}}"""
@@ -258,7 +247,10 @@ Respond ONLY with JSON:
         
         if test_passed:
             passed = True
+            final_code = code
             break
+        
+        final_code = code
     
     # Calculate totals
     total_time = sum(a['time'] for a in attempts)
@@ -272,7 +264,8 @@ Respond ONLY with JSON:
         'total_time': round(total_time, 2),
         'total_tokens': total_tokens,
         'total_cost': round(total_cost, 6),
-        'details': attempts
+        'details': attempts,
+        'final_code': final_code
     })
 
 @app.route('/api/prompts', methods=['GET'])
