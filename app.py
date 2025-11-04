@@ -25,12 +25,12 @@ def count_tokens(text):
     return int(len(text.split()) * 1.3)
 
 def test_code(code, test_cases):
-    """Execute code and run test cases"""
+    """Execute code and run test cases - STRICT validation"""
     try:
         # Create isolated namespace
         namespace = {}
         
-        # Execute the code
+        # Execute the code - if this fails, code is broken
         exec(code, namespace)
         
         # Run each test case
@@ -39,23 +39,35 @@ def test_code(code, test_cases):
             inputs = test['input']
             expected = test['expected']
             
+            # Function must exist
             if func_name not in namespace:
-                return False, f"Function {func_name} not found"
+                return False, f"Function '{func_name}' not found in code"
+            
+            func = namespace[func_name]
+            
+            # Function must be callable
+            if not callable(func):
+                return False, f"'{func_name}' is not a function"
             
             # Call function with inputs
-            if isinstance(inputs, list):
-                result = namespace[func_name](*inputs)
-            else:
-                result = namespace[func_name](inputs)
+            try:
+                if isinstance(inputs, list):
+                    result = func(*inputs)
+                else:
+                    result = func(inputs)
+            except Exception as e:
+                return False, f"Function crashed: {str(e)}"
             
-            # Check result
+            # STRICT comparison - must match exactly
             if result != expected:
-                return False, f"Expected {expected}, got {result}"
+                return False, f"Test failed: {func_name}({inputs}) returned {result}, expected {expected}"
         
         return True, "All tests passed"
         
+    except SyntaxError as e:
+        return False, f"Syntax error in code: {str(e)}"
     except Exception as e:
-        return False, str(e)
+        return False, f"Code execution error: {str(e)}"
 
 @app.route('/')
 def home():
@@ -72,11 +84,18 @@ def path1():
     passed = False
     max_attempts = 10
     
-    generation_prompt = f"""You are a code generator. Generate ONLY working Python code.
+    generation_prompt = f"""Generate a Python function that EXACTLY matches this requirement.
 
 Requirement: {prompt_text}
 
-Generate only the code, no explanations, no markdown."""
+CRITICAL RULES:
+1. Function name must be EXACTLY as specified
+2. Function must handle ALL edge cases
+3. Return type must match expected output
+4. No print statements, no extra functions, no comments
+5. Just the function code
+
+Generate ONLY the function code:"""
     
     for attempt in range(max_attempts):
         start = time.time()
@@ -141,11 +160,18 @@ def path2():
     passed = False
     max_attempts = 10
     
-    generation_prompt = f"""You are a code generator. Generate ONLY working Python code.
+    generation_prompt = f"""Generate a Python function that EXACTLY matches this requirement.
 
 Requirement: {prompt_text}
 
-Generate only the code, no explanations, no markdown."""
+CRITICAL RULES:
+1. Function name must be EXACTLY as specified
+2. Function must handle ALL edge cases
+3. Return type must match expected output
+4. No print statements, no extra functions, no comments
+5. Just the function code
+
+Generate ONLY the function code:"""
     
     for attempt in range(max_attempts):
         # Step 1: Generate with Gemini
@@ -259,7 +285,9 @@ def get_prompts():
             'test_cases': [
                 {'function': 'is_even', 'input': 4, 'expected': True},
                 {'function': 'is_even', 'input': 7, 'expected': False},
-                {'function': 'is_even', 'input': 0, 'expected': True}
+                {'function': 'is_even', 'input': 0, 'expected': True},
+                {'function': 'is_even', 'input': -2, 'expected': True},
+                {'function': 'is_even', 'input': -3, 'expected': False}
             ]
         },
         {
