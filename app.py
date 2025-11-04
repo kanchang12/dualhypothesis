@@ -12,14 +12,14 @@ app = Flask(__name__)
 
 # Setup
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
-gemini = genai.GenerativeModel('gemini-pro')
+gemini = genai.GenerativeModel('gemini-2.5-flash')
 openai_client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
 
-# Pricing per 1M tokens
-GEMINI_INPUT_COST = 0.50 / 1_000_000
-GEMINI_OUTPUT_COST = 1.50 / 1_000_000
-OPENAI_INPUT_COST = 0.150 / 1_000_000
-OPENAI_OUTPUT_COST = 0.600 / 1_000_000
+# Pricing per 1M tokens (Paid Tier)
+GEMINI_INPUT_COST = 0.30 / 1_000_000     # $0.30 per 1M input tokens
+GEMINI_OUTPUT_COST = 2.50 / 1_000_000    # $2.50 per 1M output tokens (including thinking)
+OPENAI_INPUT_COST = 0.150 / 1_000_000    # GPT-4o-mini
+OPENAI_OUTPUT_COST = 0.600 / 1_000_000   # GPT-4o-mini
 
 def count_tokens(text):
     return int(len(text.split()) * 1.3)
