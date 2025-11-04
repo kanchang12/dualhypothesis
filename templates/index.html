@@ -251,95 +251,132 @@
             path2History = [];
             document.getElementById('winner').style.display = 'none';
             
-            for (let i = 0; i < prompts.length; i++) {
-                // Reset history every 5 prompts (new problem set)
-                if (i % 5 === 0) {
-                    path1History = [];
-                    path2History = [];
-                }
-                
-                await runBothPaths(prompts[i], i);
-                await sleep(500);
-            }
+            // Run both paths INDEPENDENTLY - don't wait for each other
+            await Promise.all([
+                runPath1(),
+                runPath2()
+            ]);
             
             showWinner();
             document.getElementById('startBtn').disabled = false;
         }
         
-        async function runBothPaths(promptData, index) {
-            // Mark both as running
+        async function runPath1() {
+            for (let i = 0; i < prompts.length; i++) {
+                // Reset history every 5 prompts
+                if (i % 5 === 0) {
+                    path1History = [];
+                }
+                
+                await runSinglePath1(prompts[i], i);
+                await sleep(100);
+            }
+        }
+        
+        async function runPath2() {
+            for (let i = 0; i < prompts.length; i++) {
+                // Reset history every 5 prompts
+                if (i % 5 === 0) {
+                    path2History = [];
+                }
+                
+                await runSinglePath2(prompts[i], i);
+                await sleep(100);
+            }
+        }
+        
+        async function runSinglePath1(promptData, index) {
+            // Mark as running
             document.getElementById('dot-path1-' + index).className = 'dot running';
-            document.getElementById('dot-path2-' + index).className = 'dot running';
             
             // Show current test
             const shortPrompt = promptData.prompt.substring(0, 50) + '...';
             document.getElementById('path1-current').style.display = 'block';
             document.getElementById('path1-current').textContent = `Test ${index + 1}: ${shortPrompt}`;
-            document.getElementById('path2-current').style.display = 'block';
-            document.getElementById('path2-current').textContent = `Test ${index + 1}: ${shortPrompt}`;
             
-            // Run both paths in parallel with conversation history
-            const [result1, result2] = await Promise.all([
-                fetch('/api/path1', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        ...promptData,
-                        conversation_history: path1History
-                    })
-                }).then(r => r.json()),
-                
-                fetch('/api/path2', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        ...promptData,
-                        conversation_history: path2History
-                    })
-                }).then(r => r.json())
-            ]);
+            // Run Path 1
+            const result = await fetch('/api/path1', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    ...promptData,
+                    conversation_history: path1History
+                })
+            }).then(r => r.json());
             
-            // Add prompt to history for next iteration
+            // Add to history
             path1History.push(promptData.prompt);
-            path2History.push(promptData.prompt);
             
-            // Display generated code
-            if (result1.final_code) {
+            // Display code
+            if (result.final_code) {
                 document.getElementById('path1-code').style.display = 'block';
-                document.getElementById('path1-code').textContent = result1.final_code;
-            }
-            if (result2.final_code) {
-                document.getElementById('path2-code').style.display = 'block';
-                document.getElementById('path2-code').textContent = result2.final_code;
+                document.getElementById('path1-code').textContent = result.final_code;
             }
             
-            // Update Path 1
+            // Update totals
             path1Total.completed++;
-            path1Total.attempts += result1.attempts;
-            path1Total.time += result1.total_time;
-            path1Total.tokens += result1.total_tokens;
-            path1Total.cost += result1.total_cost;
+            path1Total.attempts += result.attempts;
+            path1Total.time += result.total_time;
+            path1Total.tokens += result.total_tokens;
+            path1Total.cost += result.total_cost;
             
-            if (result1.passed) {
+            // Update dot
+            if (result.passed) {
                 document.getElementById('dot-path1-' + index).className = 'dot success';
             } else {
                 document.getElementById('dot-path1-' + index).className = 'dot fail';
             }
             
-            // Update Path 2
-            path2Total.completed++;
-            path2Total.attempts += result2.attempts;
-            path2Total.time += result2.total_time;
-            path2Total.tokens += result2.total_tokens;
-            path2Total.cost += result2.total_cost;
+            updateDisplay();
+        }
+        
+        async function runSinglePath2(promptData, index) {
+            // Mark as running
+            document.getElementById('dot-path2-' + index).className = 'dot running';
             
-            if (result2.passed) {
+            // Show current test
+            const shortPrompt = promptData.prompt.substring(0, 50) + '...';
+            document.getElementById('path2-current').style.display = 'block';
+            document.getElementById('path2-current').textContent = `Test ${index + 1}: ${shortPrompt}`;
+            
+            // Run Path 2
+            const result = await fetch('/api/path2', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    ...promptData,
+                    conversation_history: path2History
+                })
+            }).then(r => r.json());
+            
+            // Add to history
+            path2History.push(promptData.prompt);
+            
+            // Display code
+            if (result.final_code) {
+                document.getElementById('path2-code').style.display = 'block';
+                document.getElementById('path2-code').textContent = result.final_code;
+            }
+            
+            // Update totals
+            path2Total.completed++;
+            path2Total.attempts += result.attempts;
+            path2Total.time += result.total_time;
+            path2Total.tokens += result.total_tokens;
+            path2Total.cost += result.total_cost;
+            
+            // Update dot
+            if (result.passed) {
                 document.getElementById('dot-path2-' + index).className = 'dot success';
             } else {
                 document.getElementById('dot-path2-' + index).className = 'dot fail';
             }
             
             updateDisplay();
+        }
+        
+        async function runBothPaths(promptData, index) {
+            // DEPRECATED - not used anymore
         }
         
         function updateDisplay() {
